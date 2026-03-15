@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor EMP — El Mosquito Puntano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f7f7f5;--bg3:#f0f0ed;
+  --text:#0a0a0a;--text2:#555;--text3:#999;
+  --border:#ddd;--border2:#ccc;
+  --green:#2d7a4f;--red:#c0392b;
+  --black:#0a0a0a;
+}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.emp-hdr{background:#0a0a0a;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.emp-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:4px;color:#fff}
+.emp-tag{font-size:9px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-top:1px}
+.emp-st{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#555;transition:color .3s}
+.emp-st.saved{color:#4a9e6a}
+
+.emp-body{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 48px)}
+.emp-main{padding:24px 28px;border-right:1px solid var(--border)}
+.emp-side{padding:18px 16px;background:var(--bg2);overflow-y:auto}
+
+.fg{margin-bottom:18px}
+.fl{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.fl .hint{font-weight:400;text-transform:none;letter-spacing:0.5px;color:var(--text3);font-size:10px}
+
+.ei{width:100%;border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:14px;background:#fff;color:var(--text);resize:vertical;transition:border-color .15s;outline:none}
+.ei:focus{border-color:#0a0a0a}
+.ei.title-f{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;resize:none}
+select.ei{resize:none;cursor:pointer}
+
+.meta-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.cc{font-size:11px;color:var(--text3);text-align:right;margin-top:3px}
+.cc.warn{color:var(--red)}
+
+.ss{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.ss:last-child{border-bottom:none;margin-bottom:0}
+.st{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:10px}
+
+.sr{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:var(--text2)}
+.sv{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+
+.ab{width:100%;padding:9px;background:#0a0a0a;color:#fff;border:none;border-radius:4px;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:7px;transition:background .15s}
+.ab:hover{background:#333}
+.ab.sec{background:transparent;color:var(--text);border:1px solid var(--border2)}
+.ab.sec:hover{background:var(--bg3)}
+.ab.exp{background:#1a4a2e;color:#fff}
+.ab.exp:hover{background:#0f3020}
+.ab.prev{background:#1a2a4a;color:#fff}
+.ab.prev:hover{background:#0f1f3a}
+
+.air{margin-top:8px;padding:10px 12px;background:#fff;border-left:3px solid #0a0a0a;border-radius:0 4px 4px 0;font-size:13px;line-height:1.6;color:var(--text2);display:none;max-height:220px;overflow-y:auto;white-space:pre-wrap}
+.air.vis{display:block}
+.al{color:var(--text3);font-style:italic}
+
+.apb{padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--text);display:none;margin-right:5px;margin-top:6px}
+.apb.vis{display:inline-block}
+.apb:hover{background:var(--bg2)}
+
+.ci{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.4}
+.cd{width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0;margin-top:3px;transition:background .3s}
+.cd.ok{background:var(--green)}
+.cd.warn{background:var(--red)}
+
+.doc-area{border:1px dashed var(--border2);border-radius:4px;padding:10px;min-height:60px}
+.doc-empty{font-size:12px;color:var(--text3)}
+.doc-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.doc-item:last-child{border-bottom:none}
+.doc-rm{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 6px;font-size:12px;border-radius:3px}
+.doc-rm:hover{color:var(--red);background:#fff0f0}
+.add-doc-row{display:flex;gap:6px;margin-top:8px}
+.add-doc-row input{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:'Barlow',sans-serif;outline:none}
+.add-doc-row input:focus{border-color:#0a0a0a}
+.add-doc-row select{padding:8px 10px;border:1px solid var(--border);border-radius:4px;font-size:12px;cursor:pointer;background:#fff;outline:none}
+.add-doc-btn{padding:8px 14px;background:#0a0a0a;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap}
+.add-doc-btn:hover{background:#333}
+
+.badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-left:5px}
+.badge.multimedia{background:#e8f0fe;color:#1a4ea3}
+.badge.doc{background:#e8f5e9;color:#1a4a2e}
+
+.action-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.action-row .ab{width:auto;flex:1;min-width:130px}
+
+/* MODALES */
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:999;display:none;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+
+.prev-box{background:#fff;color:#111;max-width:700px;width:92%;max-height:88vh;overflow-y:auto;border-radius:2px;padding:40px 44px}
+.prev-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:14px}
+.prev-divider{height:3px;background:#0a0a0a;width:32px;margin-bottom:14px}
+.prev-title{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;line-height:1.1;color:#0a0a0a;margin-bottom:14px}
+.prev-bajada{font-size:17px;line-height:1.5;color:#333;border-top:2px solid #0a0a0a;border-bottom:1px solid #ddd;padding:14px 0;margin-bottom:20px}
+.prev-body{font-size:15px;line-height:1.85;color:#222;white-space:pre-wrap}
+.prev-meta{margin-top:28px;padding-top:14px;border-top:1px solid #ddd;font-size:11px;color:#999;letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.prev-docs-section{margin-top:18px;padding-top:14px;border-top:1px solid #ddd}
+.prev-docs-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:8px}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;letter-spacing:2px;color:#0a0a0a}
+.mc-btn{background:#0a0a0a;color:#fff;border:none;padding:7px 16px;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:3px;font-family:'Barlow',sans-serif}
+.mc-btn:hover{background:#333}
+
+.exp-box{background:#fff;max-width:720px;width:92%;max-height:88vh;overflow-y:auto;border-radius:6px;padding:28px;border:1px solid var(--border)}
+.exp-ta{width:100%;min-height:420px;font-family:'Courier New',monospace;font-size:12px;line-height:1.65;padding:16px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text);resize:vertical;outline:none}
+.exp-btns{display:flex;gap:8px;margin-top:12px;align-items:center}
+.exp-copy{padding:10px 20px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;border:none;background:#0a0a0a;color:#fff;font-family:'Barlow',sans-serif}
+.exp-copy:hover{background:#333}
+.exp-close{padding:10px 18px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;background:transparent;color:var(--text);border:1px solid var(--border2);font-family:'Barlow',sans-serif}
+.exp-close:hover{background:var(--bg2)}
+.copied{font-size:11px;color:var(--green);font-weight:700;letter-spacing:1px;display:none;align-items:center;gap:4px}
+.copied.vis{display:flex}
+
+/* GUIA RAPIDA */
+.guide-box{background:#0a0a0a;color:#fff;border-radius:4px;padding:14px 16px;margin-bottom:20px;font-size:12px;line-height:1.7}
+.guide-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:2px;font-size:13px;margin-bottom:8px;color:#fff}
+.guide-step{display:flex;gap:8px;margin-bottom:4px}
+.guide-num{font-weight:700;color:#888;min-width:16px}
+.guide-txt{color:#bbb}
+.guide-close{background:none;border:none;color:#666;cursor:pointer;font-size:18px;float:right;margin-top:-4px;line-height:1}
+.guide-close:hover{color:#fff}
+
+@media(max-width:700px){
+  .emp-body{grid-template-columns:1fr}
+  .emp-side{border-top:1px solid var(--border)}
+  .meta-row{grid-template-columns:1fr}
+  .prev-box{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="emp-hdr">
+  <div>
+    <div class="emp-logo">EMP</div>
+    <div class="emp-tag">Periodismo sin relato</div>
+  </div>
+  <div class="emp-st" id="st">Borrador</div>
+</div>
+
+<div class="emp-body">
+  <div class="emp-main">
+
+    <div class="guide-box" id="guide">
+      <button class="guide-close" onclick="document.getElementById('guide').style.display='none'">×</button>
+      <div class="guide-title">GUÍA RÁPIDA — EDITOR EMP</div>
+      <div class="guide-step"><span class="guide-num">1.</span><span class="guide-txt">Elegí autor y sección</span></div>
+      <div class="guide-step"><span class="guide-num">2.</span><span class="guide-txt">Escribí el tema/contexto — los datos que tenés</span></div>
+      <div class="guide-step"><span class="guide-num">3.</span><span class="guide-txt">Cargá documentación o multimedia de referencia</span></div>
+      <div class="guide-step"><span class="guide-num">4.</span><span class="guide-txt">Usá "Generar nota" o mejorá cada campo con la IA</span></div>
+      <div class="guide-step"><span class="guide-num">5.</span><span class="guide-txt">Revisá el checklist — todo verde antes de exportar</span></div>
+      <div class="guide-step"><span class="guide-num">6.</span><span class="guide-txt">Exportar → Copiar → Pegar en Medios CMS</span></div>
+    </div>
+
+    <div class="meta-row">
+      <div class="fg" style="margin-bottom:0">
+        <div class="fl">Autor</div>
+        <select class="ei" id="autor" onchange="updateStats()">
+          <option value="">— Seleccionar —</option>
+          <option>Mosconi</option>
+          <option>Franklin Lucero</option>
+          <option>Redacción</option>
+          <option>Lavalle</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <div class="fl">Sección</div>
+        <select class="ei" id="seccion" onchange="updateStats()">
+          <option value="">— Seleccionar —</option>
+          <option>Actualidad</option>
+          <option>Provincia</option>
+          <option>Nacionales</option>
+          <option>Internacionales</option>
+          <option>Deporte</option>
+          <option>Economía</option>
+          <option>Editorial</option>
+          <option>Rosca y Tongo</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="height:18px"></div>
+
+    <div class="fg">
+      <div class="fl">Tema / contexto de la nota <span class="hint">— punto de partida para la IA</span></div>
+      <textarea class="ei" id="tema" rows="3" placeholder="Ej: El municipio licitó obras por $200M sin llamado público. Hay 3 empresas vinculadas al intendente. Fuente: resolución 445/26..." oninput="updateStats()"></textarea>
+    </div>
+
+    <div class="fg">
+      <div class="fl">Título <span class="hint">— corto, concreto, verificable. Sin adjetivos.</span></div>
+      <textarea id="titulo" class="ei title-f" rows="2" maxlength="120" placeholder="Escribí el título aquí..." oninput="updateStats(); checkTitle()"></textarea>
+      <div class="cc" id="tcc">0 / 120</div>
+    </div>
+
+    <div class="fg">
+      <div class="fl">Bajada <span class="hint">— hasta 3 líneas, contexto político inmediato</span></div>
+      <textarea id="bajada" class="ei" rows="3" maxlength="300" placeholder="Aportá el contexto necesario..." oninput="updateStats()"></textarea>
+      <div class="cc" id="bcc">0 / 300</div>
+    </div>
+
+    <div class="fg">
+      <div class="fl">Cuerpo <span class="hint">— máx. 5 párrafos, pirámide invertida</span></div>
+      <textarea id="cuerpo" class="ei" style="min-height:220px" placeholder="Desarrollá la nota. Lo más importante primero." oninput="updateStats()"></textarea>
+      <div class="cc" id="ccc">0 palabras</div>
+    </div>
+
+    <div class="fg">
+      <div class="fl">Documentación / multimedia adjunta</div>
+      <div class="doc-area">
+        <div id="doc-empty" class="doc-empty">Sin archivos adjuntos. Agregá links, documentos o multimedia de referencia.</div>
+        <div id="doc-list"></div>
+      </div>
+      <div class="add-doc-row">
+        <input type="text" id="doc-input" placeholder="Link, archivo o descripción..." onkeydown="if(event.key==='Enter')addDoc()"/>
+        <select id="doc-type">
+          <option value="doc">Doc</option>
+          <option value="multimedia">Multimedia</option>
+        </select>
+        <button class="add-doc-btn" onclick="addDoc()">+ Agregar</button>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="ab prev" onclick="openPreview()">Previsualizar nota</button>
+      <button class="ab exp" onclick="openExport()">Exportar para Medios CMS</button>
+    </div>
+
+  </div>
+
+  <div class="emp-side">
+
+    <div class="ss">
+      <div class="st">Estadísticas</div>
+      <div class="sr"><span>Palabras totales</span><span class="sv" id="s-pal">0</span></div>
+      <div class="sr"><span>Tiempo de lectura</span><span class="sv" id="s-lec">0 min</span></div>
+      <div class="sr"><span>Párrafos</span><span class="sv" id="s-par">0 / 5</span></div>
+      <div class="sr"><span>Material adjunto</span><span class="sv" id="s-doc">0</span></div>
+    </div>
+
+    <div class="ss">
+      <div class="st">Checklist EMP</div>
+      <div class="ci"><div class="cd" id="ch-t"></div><span>Título sin adjetivos editorializantes</span></div>
+      <div class="ci"><div class="cd" id="ch-b"></div><span>Bajada dentro de 3 líneas</span></div>
+      <div class="ci"><div class="cd" id="ch-p"></div><span>Cuerpo con máx. 5 párrafos</span></div>
+      <div class="ci"><div class="cd" id="ch-l"></div><span>Nota con contenido suficiente</span></div>
+      <div class="ci"><div class="cd" id="ch-m"></div><span>Autor y sección seleccionados</span></div>
+    </div>
+
+    <div class="ss">
+      <div class="st">Asistente IA</div>
+      <button class="ab" onclick="aiGenerar()">⚡ Generar nota desde el tema</button>
+      <button class="ab" onclick="aiTitulo()">Mejorar título</button>
+      <button class="ab" onclick="aiBajada()">Mejorar bajada</button>
+      <button class="ab" onclick="aiCuerpo()">Revisar / completar cuerpo</button>
+      <button class="ab sec" onclick="aiAngulo()">Sugerir ángulo político</button>
+      <div class="air" id="air"></div>
+      <div id="apply-btns">
+        <button class="apb" id="apb-titulo" onclick="aplicar('titulo')">Aplicar al título</button>
+        <button class="apb" id="apb-bajada" onclick="aplicar('bajada')">Aplicar a bajada</button>
+        <button class="apb" id="apb-cuerpo" onclick="aplicar('cuerpo')">Aplicar al cuerpo</button>
+      </div>
+    </div>
+
+    <div class="ss">
+      <div class="st">Manual de estilo</div>
+      <div class="ci"><div class="cd ok"></div><span>Datos antes que épica</span></div>
+      <div class="ci"><div class="cd ok"></div><span>Discutir hechos, no relatos</span></div>
+      <div class="ci"><div class="cd ok"></div><span>Documentar, no indignarse</span></div>
+      <div class="ci"><div class="cd ok"></div><span>Sujeto + verbo + acción</span></div>
+      <div class="ci"><div class="cd ok"></div><span>Realidad antes que propaganda</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PREVIEW -->
+<div class="overlay" id="prev-modal">
+  <div class="prev-box">
+    <div class="modal-hdr">
+      <div class="modal-logo">EL MOSQUITO PUNTANO</div>
+      <button class="mc-btn" onclick="closeModal('prev-modal')">Cerrar</button>
+    </div>
+    <div class="prev-eyebrow" id="prev-eyebrow">San Luis · Política provincial</div>
+    <div class="prev-divider"></div>
+    <div class="prev-title" id="prev-t"></div>
+    <div class="prev-bajada" id="prev-b"></div>
+    <div class="prev-body" id="prev-c"></div>
+    <div class="prev-docs-section" id="prev-docs" style="display:none">
+      <div class="prev-docs-title">Material adjunto</div>
+      <div id="prev-docs-list"></div>
+    </div>
+    <div class="prev-meta">
+      <span id="prev-meta-l"></span>
+      <span id="prev-meta-r"></span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORT -->
+<div class="overlay" id="exp-modal">
+  <div class="exp-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text2)">Exportar para Medios CMS</div>
+      <button class="mc-btn" style="background:var(--bg2);color:var(--text);border:1px solid var(--border2)" onclick="closeModal('exp-modal')">Cerrar</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">Copiá este texto y pegalo en Medios CMS. El formato está listo para publicar.</div>
+    <textarea class="exp-ta" id="exp-text" readonly onclick="this.select()"></textarea>
+    <div class="exp-btns">
+      <button class="exp-copy" onclick="copyExport()">Copiar todo</button>
+      <button class="exp-close" onclick="closeModal('exp-modal')">Cerrar</button>
+      <div class="copied" id="copied">✓ ¡Copiado al portapapeles!</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let docs = [];
+let lastAIText = '';
+
+const ADJECTIVES = /\b(increíble|histórico|brutal|polémico|escándalo|gravísimo|extraordinario|impresionante|flagrante|vergonzoso|devastador|épico|inédito|aberrante)\b/i;
+
+function updateStats() {
+  const t = document.getElementById('titulo').value;
+  const b = document.getElementById('bajada').value;
+  const c = document.getElementById('cuerpo').value;
+  const autor = document.getElementById('autor').value;
+  const seccion = document.getElementById('seccion').value;
+
+  document.getElementById('tcc').textContent = t.length + ' / 120';
+  document.getElementById('bcc').textContent = b.length + ' / 300';
+
+  const wC = c.trim() ? c.trim().split(/\s+/).length : 0;
+  const wT = wC + (t.trim() ? t.trim().split(/\s+/).length : 0) + (b.trim() ? b.trim().split(/\s+/).length : 0);
+
+  document.getElementById('ccc').textContent = wC + ' palabras';
+  document.getElementById('s-pal').textContent = wT;
+  document.getElementById('s-lec').textContent = Math.max(1, Math.round(wT / 200)) + ' min';
+  document.getElementById('s-doc').textContent = docs.length;
+
+  const parrafos = c.trim() ? c.trim().split(/\n\n+/).filter(p => p.trim()).length : 0;
+  document.getElementById('s-par').textContent = parrafos + ' / 5';
+
+  setDot('ch-t', t.length > 5 && !ADJECTIVES.test(t));
+  setDot('ch-b', b.length > 0 && b.length <= 280);
+  setDot('ch-p', parrafos >= 1 && parrafos <= 5);
+  setDot('ch-l', wT >= 80);
+  setDot('ch-m', autor !== '' && seccion !== '');
+
+  const st = document.getElementById('st');
+  if (wT > 20) { st.textContent = 'Guardado'; st.className = 'emp-st saved'; }
+  else { st.textContent = 'Borrador'; st.className = 'emp-st'; }
+}
+
+function checkTitle() {
+  const t = document.getElementById('titulo').value;
+  const el = document.getElementById('tcc');
+  if (ADJECTIVES.test(t)) {
+    el.textContent = '⚠ Evitá adjetivos editorializantes';
+    el.className = 'cc warn';
+  } else {
+    el.textContent = t.length + ' / 120';
+    el.className = 'cc';
+  }
+}
+
+function setDot(id, ok) {
+  const d = document.getElementById(id);
+  d.className = 'cd' + (ok ? ' ok' : ' warn');
+}
+
+function addDoc() {
+  const val = document.getElementById('doc-input').value.trim();
+  const type = document.getElementById('doc-type').value;
+  if (!val) return;
+  docs.push({ val, type });
+  document.getElementById('doc-input').value = '';
+  renderDocs();
+  updateStats();
+}
+
+function removeDoc(i) {
+  docs.splice(i, 1);
+  renderDocs();
+  updateStats();
+}
+
+function renderDocs() {
+  const list = document.getElementById('doc-list');
+  const empty = document.getElementById('doc-empty');
+  if (docs.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = docs.map((d, i) =>
+    `<div class="doc-item"><span>${escHtml(d.val)} <span class="badge ${d.type}">${d.type === 'multimedia' ? 'Multimedia' : 'Doc'}</span></span><button class="doc-rm" onclick="removeDoc(${i})">✕</button></div>`
+  ).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function openPreview() {
+  const seccion = document.getElementById('seccion').value || 'Política provincial';
+  const autor = document.getElementById('autor').value || '';
+  const t = document.getElementById('titulo').value || '(sin título)';
+  const b = document.getElementById('bajada').value || '';
+  const c = document.getElementById('cuerpo').value || '';
+  const wC = c.trim() ? c.trim().split(/\s+/).length : 0;
+  const mins = Math.max(1, Math.round(wC / 200));
+  const fecha = new Date().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' });
+
+  document.getElementById('prev-eyebrow').textContent = 'San Luis · ' + seccion;
+  document.getElementById('prev-t').textContent = t;
+  document.getElementById('prev-b').textContent = b;
+  document.getElementById('prev-c').textContent = c;
+  document.getElementById('prev-meta-l').textContent = (autor ? autor + ' — ' : '') + fecha;
+  document.getElementById('prev-meta-r').textContent = mins + ' min de lectura';
+
+  const pd = document.getElementById('prev-docs');
+  const pdl = document.getElementById('prev-docs-list');
+  if (docs.length > 0) {
+    pd.style.display = 'block';
+    pdl.innerHTML = docs.map(d =>
+      `<div style="font-size:13px;color:#333;margin-bottom:4px">· ${escHtml(d.val)} <span class="badge ${d.type}">${d.type === 'multimedia' ? 'Multimedia' : 'Doc'}</span></div>`
+    ).join('');
+  } else {
+    pd.style.display = 'none';
+  }
+  document.getElementById('prev-modal').classList.add('open');
+}
+
+function openExport() {
+  const autor = document.getElementById('autor').value || 'Redacción';
+  const seccion = document.getElementById('seccion').value || '—';
+  const tema = document.getElementById('tema').value || '';
+  const titulo = document.getElementById('titulo').value || '(sin título)';
+  const bajada = document.getElementById('bajada').value || '';
+  const cuerpo = document.getElementById('cuerpo').value || '';
+  const fecha = new Date().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' });
+  const hora = new Date().toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+  const wT = cuerpo.trim() ? cuerpo.trim().split(/\s+/).length : 0;
+  const mins = Math.max(1, Math.round(wT / 200));
+
+  let txt = '';
+  txt += '=====================================\n';
+  txt += '  EL MOSQUITO PUNTANO\n';
+  txt += '  PERIODISMO SIN RELATO\n';
+  txt += '=====================================\n\n';
+  txt += 'SECCIÓN:  ' + seccion.toUpperCase() + '\n';
+  txt += 'AUTOR:    ' + autor + '\n';
+  txt += 'FECHA:    ' + fecha + ' · ' + hora + '\n';
+  txt += 'LECTURA:  ' + mins + ' min aprox.\n';
+  if (tema) txt += '\nCONTEXTO: ' + tema + '\n';
+  txt += '\n-------------------------------------\n\n';
+  txt += 'TÍTULO\n';
+  txt += titulo + '\n\n';
+  txt += 'BAJADA\n';
+  txt += (bajada || '(sin bajada)') + '\n\n';
+  txt += 'CUERPO\n';
+  txt += (cuerpo || '(sin cuerpo)') + '\n';
+
+  if (docs.length > 0) {
+    txt += '\n-------------------------------------\n';
+    txt += 'MATERIAL ADJUNTO\n';
+    docs.forEach((d, i) => {
+      txt += (i + 1) + '. [' + (d.type === 'multimedia' ? 'MULTIMEDIA' : 'DOC') + '] ' + d.val + '\n';
+    });
+  }
+
+  txt += '\n=====================================\n';
+  txt += 'Editor EMP · El Mosquito Puntano\n';
+  txt += '=====================================\n';
+
+  document.getElementById('exp-text').value = txt;
+  document.getElementById('copied').className = 'copied';
+  document.getElementById('exp-modal').classList.add('open');
+}
+
+function copyExport() {
+  const ta = document.getElementById('exp-text');
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  try {
+    navigator.clipboard.writeText(ta.value).catch(() => document.execCommand('copy'));
+  } catch(e) {
+    document.execCommand('copy');
+  }
+  const msg = document.getElementById('copied');
+  msg.className = 'copied vis';
+  setTimeout(() => { msg.className = 'copied'; }, 3000);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function getCtx() {
+  return {
+    tema: document.getElementById('tema').value,
+    seccion: document.getElementById('seccion').value || 'general',
+    docsCtx: docs.length > 0 ? '\nDocumentación/multimedia disponible:\n' + docs.map(d => '- [' + d.type + '] ' + d.val).join('\n') : ''
+  };
+}
+
+async function callClaude(prompt) {
+  const air = document.getElementById('air');
+  air.className = 'air vis';
+  air.textContent = 'Analizando con el manual EMP...';
+  ['apb-titulo','apb-bajada','apb-cuerpo'].forEach(id => document.getElementById(id).className = 'apb');
+  lastAIText = '';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!r.ok) { air.textContent = 'Error ' + r.status + '. Verificá tu conexión.'; return ''; }
+    const data = await r.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || 'Sin respuesta.';
+    air.textContent = text;
+    lastAIText = text;
+    return text;
+  } catch(e) {
+    air.textContent = 'Sin conexión. El asistente de IA requiere internet.';
+    return '';
+  }
+}
+
+function showApply(modes) {
+  modes.forEach(m => {
+    const el = document.getElementById('apb-' + m);
+    if (el) el.className = 'apb vis';
+  });
+}
+
+function aplicar(campo) {
+  if (!lastAIText) return;
+  if (confirm('¿Reemplazar "' + campo + '" con la sugerencia del asistente?\n(Podés editarla luego)')) {
+    document.getElementById(campo).value = lastAIText;
+    updateStats();
+  }
+}
+
+async function aiGenerar() {
+  const { tema, seccion, docsCtx } = getCtx();
+  if (!tema.trim()) { alert('Escribí primero el tema/contexto de la nota.'); return; }
+  await callClaude(
+    `Sos el asistente de redacción de El Mosquito Puntano, medio de política de San Luis, Argentina. Lema: "Periodismo sin relato".\n\nManual de estilo:\n- Título: corto, concreto, verificable. Sin adjetivos. Sujeto+verbo+acción.\n- Bajada: hasta 3 líneas, contexto político inmediato, sin épica.\n- Cuerpo: máx. 5 párrafos, pirámide invertida, lenguaje claro y directo.\n- No editorializar sin sustento. Datos antes que épica.\n- Sección: ${seccion}\n${docsCtx}\n\nTema/contexto: ${tema}\n\nRedactá una nota completa con este formato EXACTO (sin asteriscos ni markdown):\n\nTÍTULO:\n[título]\n\nBAJADA:\n[bajada]\n\nCUERPO:\n[cuerpo, párrafos separados por línea en blanco, máx. 5]`
+  );
+  showApply(['titulo', 'bajada', 'cuerpo']);
+}
+
+async function aiTitulo() {
+  const titulo = document.getElementById('titulo').value;
+  const { tema, seccion } = getCtx();
+  if (!titulo.trim() && !tema.trim()) { alert('Escribí el título o el tema primero.'); return; }
+  await callClaude(
+    `Sos el asistente de redacción de El Mosquito Puntano (San Luis, Argentina). "Periodismo sin relato".\n\nReglas para títulos:\n- Corto, concreto y verificable\n- Sin adjetivos ni interpretaciones\n- Sujeto + verbo + acción\n- Sección: ${seccion}\n\nTítulo actual: "${titulo || '(vacío)'}"\nTema: "${tema || '(no especificado)'}"\n\nProponé 2 títulos alternativos. Para cada uno: el título en una línea, y debajo una línea breve explicando qué mejora. Sin preámbulo, sin asteriscos.`
+  );
+  showApply(['titulo']);
+}
+
+async function aiBajada() {
+  const titulo = document.getElementById('titulo').value;
+  const bajada = document.getElementById('bajada').value;
+  const { tema, seccion } = getCtx();
+  if (!bajada.trim() && !titulo.trim()) { alert('Escribí la bajada o el título primero.'); return; }
+  await callClaude(
+    `Sos el asistente de redacción de El Mosquito Puntano (San Luis, Argentina). "Periodismo sin relato".\n\nReglas para la bajada:\n- Máximo 3 líneas\n- Aporta contexto político inmediato\n- Sin slogans ni épica\n- Complementa el título sin repetirlo\n\nTítulo: "${titulo || '(vacío)'}"\nBajada actual: "${bajada || '(vacía)'}"\nTema: "${tema || '(no especificado)'}"\nSección: ${seccion}\n\nReescribí la bajada. Dá 1 versión mejorada y en una línea final explicá qué cambiaste. Sin preámbulo, sin asteriscos.`
+  );
+  showApply(['bajada']);
+}
+
+async function aiCuerpo() {
+  const cuerpo = document.getElementById('cuerpo').value;
+  const { tema, docsCtx } = getCtx();
+  if (!cuerpo.trim() && !tema.trim()) { alert('Escribí el cuerpo o el tema primero.'); return; }
+  await callClaude(
+    `Sos el asistente de redacción de El Mosquito Puntano (San Luis, Argentina). "Periodismo sin relato".\n\nReglas para el cuerpo:\n- Máx. 5 párrafos, pirámide invertida\n- Lenguaje claro, directo, profesional\n- No editorializar sin sustento\n- Documentar, no indignarse\n${docsCtx}\n\nCuerpo actual:\n${cuerpo || '(vacío)'}\nTema: "${tema || '(no especificado)'}"\n\nSi hay cuerpo: analizá y señalá qué mejorar, qué cortar y qué está bien. Si no hay cuerpo: redactá uno basado en el tema (máx. 5 párrafos). Sin preámbulo, sin asteriscos.`
+  );
+  showApply(['cuerpo']);
+}
+
+async function aiAngulo() {
+  const { tema, seccion, docsCtx } = getCtx();
+  const titulo = document.getElementById('titulo').value;
+  if (!tema.trim() && !titulo.trim()) { alert('Escribí el tema primero.'); return; }
+  await callClaude(
+    `Sos el asistente editorial de El Mosquito Puntano (San Luis, Argentina). Medio crítico del poder. Temas prioritarios: fondos públicos, contrataciones, contradicciones discursivas, silencios oficiales, operaciones políticas.\n${docsCtx}\n\nTema/nota: "${tema || titulo}"\nSección: ${seccion}\n\nSugerí 2 ángulos de investigación o cobertura más incisivos y verificables. Para cada uno: nombre del ángulo (1 línea), por qué es más potente (2 líneas), qué datos buscar (1 línea). Sin preámbulo, sin asteriscos.`
+  );
+}
+</script>
+</body>
+</html>
